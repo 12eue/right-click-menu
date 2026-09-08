@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:" />
+  <title>右键菜单管理器</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="app">
+    <aside id="activitybar" aria-label="导航">
+      <button class="activity-btn active" data-view="menus" title="菜单管理" aria-label="菜单管理">
+        <i data-lucide="list"></i>
+      </button>
+      <button class="activity-btn" data-view="backups" title="备份" aria-label="备份">
+        <i data-lucide="archive"></i>
+      </button>
+      <button class="activity-btn" data-view="about" title="关于" aria-label="关于">
+        <i data-lucide="info"></i>
+      </button>
+    </aside>
+
+    <aside id="sidebar">
+      <div id="sidebar-menus" class="sidebar-section">
+        <div class="sidebar-header">
+          <span>右键位置</span>
+          <button id="refresh-btn" class="icon-btn" title="刷新当前范围">
+            <i data-lucide="refresh-cw"></i>
+          </button>
+        </div>
+        <div id="scope-list" class="scope-list"></div>
+        <div class="custom-scope">
+          <div class="custom-scope-title">自定义范围</div>
+          <div class="custom-scope-row">
+            <input id="custom-scope" type="text" placeholder="输入扩展名，如 .zip" spellcheck="false" />
+            <button id="custom-scope-btn" class="icon-btn accent" title="应用自定义范围">
+              <i data-lucide="arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="sidebar-backups" class="sidebar-section hidden">
+        <div class="sidebar-header">
+          <span>备份</span>
+          <button id="sidebar-backups-open" class="icon-btn" title="打开备份目录">
+            <i data-lucide="folder-open"></i>
+          </button>
+        </div>
+        <div id="backup-stats" class="sidebar-stats"></div>
+        <div class="sidebar-note">
+          每次删除前会自动导出注册表项。选择备份文件后可在右侧恢复。
+        </div>
+      </div>
+
+      <div id="sidebar-about" class="sidebar-section hidden">
+        <div class="sidebar-header">
+          <span>关于</span>
+        </div>
+        <div id="about-stats" class="sidebar-stats"></div>
+        <div class="sidebar-note">
+          Electron 版本，读取注册表与管理菜单项均在本地完成。
+        </div>
+      </div>
+    </aside>
+
+    <main id="main">
+      <header id="toolbar">
+        <div class="search-box">
+          <i data-lucide="search"></i>
+          <input id="search-input" type="text" placeholder="搜索菜单名称" spellcheck="false" />
+        </div>
+        <label class="toggle-control" title="勾选后只显示普通右键中会出现的项">
+          <input type="checkbox" id="only-visible" checked />
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span>仅显示可见项</span>
+        </label>
+        <div class="spacer"></div>
+        <button id="open-backups-btn" class="toolbar-btn" title="打开备份目录">
+          <i data-lucide="folder-open"></i>
+          <span>备份</span>
+        </button>
+        <button id="delete-btn" class="toolbar-btn danger" disabled>
+          <i data-lucide="trash-2"></i>
+          <span>删除选中</span>
+        </button>
+      </header>
+
+      <section id="content">
+        <div id="menus-view" class="view active">
+          <div id="table-wrap">
+            <div class="table-row table-header">
+              <div class="col-check"><input type="checkbox" id="select-all" aria-label="全选" /></div>
+              <div class="col-name">菜单名称</div>
+              <div class="col-kind">类型</div>
+              <div class="col-source">来源</div>
+              <div class="col-location">位置</div>
+              <div class="col-command">命令或处理程序</div>
+            </div>
+            <div id="table-body"></div>
+            <div id="table-loading" class="table-loading hidden" role="status" aria-live="polite">
+              <i data-lucide="loader-circle"></i>
+              <span>正在加载…</span>
+            </div>
+            <div id="empty-state" class="hidden">
+              <i data-lucide="search-x"></i>
+              <span>没有匹配的菜单项</span>
+            </div>
+          </div>
+
+          <footer id="details-panel">
+            <div class="panel-tabs">
+              <span class="tab active">详细信息</span>
+              <span id="selection-count" class="tab"></span>
+              <div class="spacer"></div>
+              <button id="collapse-details" class="icon-btn" title="收起/展开详细信息">
+                <i data-lucide="chevron-down"></i>
+              </button>
+            </div>
+            <div id="details-body"></div>
+          </footer>
+        </div>
+
+        <div id="backups-view" class="view">
+          <div class="view-toolbar">
+            <h2>注册表备份</h2>
+            <div class="spacer"></div>
+            <button id="backups-refresh" class="toolbar-btn" title="刷新备份列表">
+              <i data-lucide="refresh-cw"></i>
+              <span>刷新</span>
+            </button>
+            <button id="backups-restore" class="toolbar-btn primary" disabled>
+              <i data-lucide="rotate-ccw"></i>
+              <span>恢复所选</span>
+            </button>
+          </div>
+          <div id="backup-list" class="backup-list"></div>
+          <div id="backup-empty" class="view-empty hidden">
+            <i data-lucide="archive"></i>
+            <span>还没有备份文件</span>
+          </div>
+        </div>
+
+        <div id="about-view" class="view">
+          <div class="about-title">
+            <h1>右键菜单管理器</h1>
+            <p>查看、清理 Windows 右键菜单中的注册表项，删除前自动备份。</p>
+          </div>
+          <div class="about-grid">
+            <div class="about-item">
+              <i data-lucide="terminal"></i>
+              <div>
+                <span>技术框架</span>
+                <strong>Electron + Node.js</strong>
+              </div>
+            </div>
+            <div class="about-item">
+              <i data-lucide="hard-drive"></i>
+              <div>
+                <span>备份目录</span>
+                <strong id="about-backup-dir">-</strong>
+              </div>
+            </div>
+            <div class="about-item">
+              <i data-lucide="shield"></i>
+              <div>
+                <span>权限状态</span>
+                <strong id="about-admin">检测中</strong>
+              </div>
+            </div>
+            <div class="about-item">
+              <i data-lucide="file-text"></i>
+              <div>
+                <span>版本</span>
+                <strong id="about-version">-</strong>
+              </div>
+            </div>
+          </div>
+          <div class="about-tips">
+            <h3>使用提示</h3>
+            <p>系统菜单项删除后可能影响 Windows 功能，请谨慎操作。应用包扩展无法直接删除，需在对应应用内关闭或卸载。</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer id="statusbar">
+      <span id="status-message">就绪</span>
+      <div class="spacer"></div>
+      <span id="status-admin" class="status-badge"></span>
+      <span id="status-count"></span>
+    </footer>
+  </div>
+
+  <div id="modal-overlay" class="hidden">
+    <div id="modal" role="dialog" aria-modal="true">
+      <h3 id="modal-title"></h3>
+      <div id="modal-body"></div>
+      <div class="modal-actions">
+        <button id="modal-cancel" class="toolbar-btn">取消</button>
+        <button id="modal-confirm" class="toolbar-btn danger">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="hidden"></div>
+
+  <script src="./vendor/lucide.min.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

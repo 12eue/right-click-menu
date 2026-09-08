@@ -1,0 +1,54 @@
+{
+  "name": "right-click-menu-manager",
+  "productName": "右键菜单管理器",
+  "version": "1.1.0",
+  "description": "Windows 右键菜单管理工具（Electron 版）",
+  "main": "main.js",
+  "author": "Local",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "build": "electron-builder --win",
+    "test-scan": "node scripts/test-scan.js"
+  },
+  "build": {
+    "appId": "com.local.rightclickmenumanager",
+    "productName": "右键菜单管理器",
+    "asar": true,
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "src/win/**/*",
+      "src/main/**/*",
+      "src/App.ico",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "src/App.ico",
+      "requestedExecutionLevel": "requireAdministrator"
+    },
+    "portable": {
+      "artifactName": "right-click-menu-${version}.exe"
+    },
+    "directories": {
+      "output": "dist"
+    }
+  },
+  "devDependencies": {
+    "electron": "^44.2.0",
+    "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "lucide": "^1.42.0"
+  }
+}
